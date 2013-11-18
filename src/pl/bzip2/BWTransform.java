@@ -25,7 +25,6 @@ public class BWTransform {
 	
 	public static BWTransform encode(String s){
 		int n = s.length();
-		char first = s.charAt(0);
 		List<BWRotation> rotations = new ArrayList<>(n);
 		for(int i = 0;i<n;i++){
 			rotations.add(new BWRotation(s, i));
@@ -37,7 +36,7 @@ public class BWTransform {
 		for(int i = 0;i<n;i++){
 			r = rotations.get(i);
 			result[i] = r.getLast();
-			if (result[i] == first) {
+			if (r.getStart()==1) {
 				firstIndex = i;
 			}
 		}
