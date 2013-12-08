@@ -7,6 +7,8 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+import pl.bzip2.io.BitReader;
+
 public class BitReaderTest {
 
 	@Test
@@ -19,7 +21,7 @@ public class BitReaderTest {
 			while(dataPos < testData.length){
 				byte read = 0;
 				for(int i = 0;i<8;i++){
-					read |= r.read();
+					read |= r.read(1024);
 					if(i<7)
 						read <<= 1;
 				}
@@ -44,7 +46,7 @@ public class BitReaderTest {
 			while(dataPos < testData.length){
 				byte read = 0;
 				for(int i = 0;i<8;i++){
-					read |= r.read();
+					read |= r.read(1024);
 					if(i<7)
 						read <<= 1;
 				}

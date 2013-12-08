@@ -1,4 +1,4 @@
-package pl.bzip2;
+package pl.bzip2.io;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.EOFException;
@@ -6,7 +6,9 @@ import java.io.EOFException;
 import org.omg.CORBA.PRIVATE_MEMBER;
 
 
-
+/**
+ * Wrapper na InputStream, który pozwala na czytanie wejścia w postaci bitów
+ */
 public class BitReader {
 	
 
@@ -23,10 +25,16 @@ public class BitReader {
 		buffer = new byte[BUFFER_LENGTH];
 	}
 	
-	
-	public byte read() throws IOException {
+	/**
+	 * Czyta kolejny bit z wejścia. Dane ze strumienia są przechowywane w buforze, 
+	 * więc kolejny odczyt ze strumienia nastąpi po przetworzeniu całego bufora.
+	 * @param bufferSize rozmiar danych jaki metoda ma wczytać w przypadku, gdy bufor jest pusty
+	 * @return przeczytany bit, 0 lub 1
+	 * @throws IOException
+	 */
+	public byte read(int bufferSize) throws IOException {
 		if (bufferPos/8 == bufferLength) {
-			bufferLength = input.read(buffer);
+			bufferLength = input.read(buffer, 0, bufferSize);
 			if (bufferLength == 0) {
 				throw new EOFException();
 			}
@@ -44,9 +52,20 @@ public class BitReader {
 		bufferPos++;
 		return result;
 	}
-	
+	/**
+	 * Zamyka strumień pod spodem
+	 * @throws IOException
+	 */
 	public void close() throws IOException{
 		input.close();
+	}
+	
+	/**
+	 * Zwraca strumień, na którym operuje BitReader.
+	 * @return
+	 */
+	public InputStream getInputStream(){
+		return input;
 	}
 	
 }

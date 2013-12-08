@@ -8,6 +8,8 @@ import java.io.PipedOutputStream;
 
 import org.junit.Test;
 
+import pl.bzip2.io.BitWriter;
+
 public class BitWriterTest {
 
 	@Test

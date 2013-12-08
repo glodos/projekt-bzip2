@@ -1,8 +1,10 @@
-package pl.bzip2;
+package pl.bzip2.io;
 import java.io.OutputStream;
 import java.io.IOException;
 
-
+/**
+ * Wrapper na OutputStream pozwalający pisać bity
+ */
 public class BitWriter {
 	
 	public static final int BUFFER_LENGTH = 1024*8;
@@ -18,6 +20,10 @@ public class BitWriter {
 		buffer = new byte[BUFFER_LENGTH];
 	}
 	
+	/**
+	 * Zapisuje zawartość bufora do strumienia o ustawia pozycję bufora na 0.
+	 * @throws IOException
+	 */
 	public void flush() throws IOException {
 		int length = bufferPos/8;
 		if (bufferPos%8 != 0) {
@@ -27,6 +33,12 @@ public class BitWriter {
 		bufferPos = 0;
 	}
 	
+	/**
+	 * Zapisuje bit do bufora. Jeśli bufor jest pełny, dane są zapisywane do strumienia.<br>
+	 * Jeśli konieczne jest wymuszenie zapisu bufora, należy użyć {@link #flush()}
+	 * @param bit 0 lub 1
+	 * @throws IOException
+	 */
 	public void write(byte bit) throws IOException {
 		byte temp = helper[bufferPos%8];
 		if (bit == 0) {
@@ -40,14 +52,32 @@ public class BitWriter {
 		}
 	}
 	
+	/**
+	 * Zamyka strumień pod spodem
+	 * @throws IOException
+	 */
 	public void close() throws IOException{
 		out.close();
 	}
 	
+	/**
+	 * Zapisuje tablicę bitów.
+	 * @param bits tablica z wartościami 0 lub 1
+	 * @throws IOException
+	 * @see {@link #write(byte)}
+	 */
 	public void write(byte[] bits) throws IOException{
 		for(int i = 0;i<bits.length;i++){
 			write(bits[i]);
 		}
+	}
+	
+	/**
+	 * Zwraca strumień pod spodem
+	 * @return
+	 */
+	public OutputStream getOutputStream(){
+		return out;
 	}
 	
 }
