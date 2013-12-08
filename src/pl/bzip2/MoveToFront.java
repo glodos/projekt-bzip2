@@ -2,12 +2,18 @@ package pl.bzip2;
 
 public class MoveToFront {
 
-	public static char[] encode(char[] input){
-		char[] L = new char[256];
+	/**
+	 * Wykonuje transformatę MoveToFront na ciągu wejściowym.
+	 * @param input ciąg wejściowy
+	 * @return ciąg po MTF
+	 */
+	public static byte[] encode(byte[] input){
+		//tablica przechowująca kody wszystkich symboli
+		byte[] L = new byte[256];
 		for(int i=0;i<256;i++){
-			L[i] = (char) i;
+			L[i] = (byte) i;
 		}
-		char[] result = new char[input.length];
+		byte[] result = new byte[input.length];
 		for(int i = 0;i<input.length;i++){
 			result[i] = L[input[i]];
 	        for (int j=0; j<256; j++)
@@ -18,13 +24,19 @@ public class MoveToFront {
 		return result;
 	}
 	
-	public static char[] decode(char[] input){
-		char[] L = new char[256];
+	/**
+	 * Odtwarza postać pierwotną ciągu wejściowego.
+	 * @param input ciąg wejściowy
+	 * @return postać oryginalna
+	 */
+	public static byte[] decode(byte[] input){
+		//tablica przechowująca kody wszystkich symboli
+		byte[] L = new byte[256];
 		for(int i=0;i<256;i++){
-			L[i] = (char) i;
+			L[i] = (byte) i;
 		}
-		char[] result = new char[input.length];
-		char tmp;
+		byte[] result = new byte[input.length];
+		byte tmp;
 	    for (int i = 0; i<input.length; i++) {
 	    	result[i] = L[input[i]];
 	        tmp = L[input[i]];

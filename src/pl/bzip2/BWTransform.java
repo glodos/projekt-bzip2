@@ -7,15 +7,15 @@ import java.util.List;
 
 public class BWTransform {
 	
-	private char[] vector;
+	private byte[] vector;
 	private int start;
 	
-	BWTransform(char[] vector, int start){
+	BWTransform(byte[] vector, int start){
 		this.vector = vector;
 		this.start = start;
 	}
 	
-	public char[] getVector() {
+	public byte[] getVector() {
 		return vector;
 	}
 
@@ -23,15 +23,15 @@ public class BWTransform {
 		return start;
 	}
 	
-	public static BWTransform encode(String s){
-		int n = s.length();
+	public static BWTransform encode(byte[] bytes){
+		int n = bytes.length;
 		List<BWRotation> rotations = new ArrayList<>(n);
 		for(int i = 0;i<n;i++){
-			rotations.add(new BWRotation(s, i));
+			rotations.add(new BWRotation(bytes, i));
 		}
 		Collections.sort(rotations);
 		int firstIndex = 0;
-		char[] result = new char[n];
+		byte[] result = new byte[n];
 		BWRotation r;
 		for(int i = 0;i<n;i++){
 			r = rotations.get(i);
@@ -43,21 +43,21 @@ public class BWTransform {
 		return new BWTransform(result, firstIndex);
 	}
 	
-	public static String decode(char[] data, int start){
-		char[] F = Arrays.copyOf(data, data.length);
+	public static byte[] decode(byte[] data, int start){
+		byte[] F = Arrays.copyOf(data, data.length);
 		Arrays.sort(F);
 		int[] T = generateT(data, F);
 		
-		char[] result = new char[data.length];
+		byte[] result = new byte[data.length];
 		int iT = start;
 		for(int i = 0;i<result.length;i++){
 			result[i] = data[iT];
 			iT = T[iT];
 		}
-		return new String(result);
+		return result;
 	}
 	
-	private static int[] generateT(char[] L, char[] F){
+	private static int[] generateT(byte[] L, byte[] F){
 		int[] T = new int[L.length];
 		boolean [] usedL = new boolean[L.length];
 		for(int i = 0;i<F.length;i++){
@@ -73,41 +73,41 @@ public class BWTransform {
 	}
 
 	static class BWRotation implements Comparable<BWRotation>{
-		String s;
+		byte[] bytes;
 		int start;
-		public BWRotation(String s, int start) {
-			this.s = s;
+		public BWRotation(byte[] bytes, int start) {
+			this.bytes = bytes;
 			this.start = start;
 		}
 		
-		public char getLast(){
-			return s.charAt((start+s.length()-1) % s.length());
+		public byte getLast(){
+			return bytes[(start+bytes.length-1) % bytes.length];
 		}
 		public int getStart(){
 			return start;
 		}
 		
-		public char charAt(int index){
-			return s.charAt((start+index+s.length()) % s.length());
+		public byte byteAt(int index){
+			return bytes[(start+index+bytes.length) % bytes.length];
 		}
 		
 		@Override
 		public String toString() {
 			StringBuilder sb = new StringBuilder();
-			for(int i = 0;i<s.length();i++){
-				sb.append(charAt(i));
+			for(int i = 0;i<bytes.length;i++){
+				sb.append(byteAt(i));
 			}
 			return sb.toString();
 		}
 		
 		@Override
 		public int compareTo(BWRotation o) {
-	        int len = s.length();
+	        int len = bytes.length;
 
 	        int k = 0;
 	        while (k < len) {
-	            char c1 = charAt(k);
-	            char c2 = o.charAt(k);
+	            byte c1 = byteAt(k);
+	            byte c2 = o.byteAt(k);
 	            if (c1 != c2) {
 	                return c1 - c2;
 	            }

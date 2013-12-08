@@ -9,16 +9,16 @@ public class BWTransformTest {
 	@Test
 	public void testEncodeAndDecode1() {
 		String test = "dupa dupa dupa heheszki";
-		BWTransform encoded = BWTransform.encode(test);
-		String decoded = BWTransform.decode(encoded.getVector(), encoded.getStart());
+		BWTransform encoded = BWTransform.encode(test.getBytes());
+		String decoded = new String(BWTransform.decode(encoded.getVector(), encoded.getStart()));
 		assertEquals(test, decoded);
 	}
 
 	@Test
 	public void testEncodeAndDecode2() {
 		String test = "Fajny projekt";
-		BWTransform encoded = BWTransform.encode(test);
-		String decoded = BWTransform.decode(encoded.getVector(), encoded.getStart());
+		BWTransform encoded = BWTransform.encode(test.getBytes());
+		String decoded = new String(BWTransform.decode(encoded.getVector(), encoded.getStart()));
 		assertEquals(test, decoded);
 	}
 
