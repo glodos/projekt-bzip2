@@ -12,7 +12,6 @@ import pl.bzip2.io.BitWriter;
 public class Huffman {
 	public static final int SYMBOL_COUNT = 256;
     private byte[][] huffmanCodes = new byte[SYMBOL_COUNT][];
-    private int nodeCount;
 
     /**
      * Koduje ciąg bajtów. Drzewo i zakodowany blok są zapisywane w strumieniu wyjściowym.
@@ -21,7 +20,6 @@ public class Huffman {
      * @throws IOException
      */
     public void encode(byte [] vector, BitWriter writer) throws IOException {
-        nodeCount = 0;
         // 0. Calculate chars frequencies
         int[] symFreqs = calcFrequencies(vector);
         // 1. Create a leaf node for each symbol and add it to the priority queue
@@ -55,7 +53,6 @@ public class Huffman {
     	for(int i = 0; i < SYMBOL_COUNT; i++) {
             if(symFreqs[i] > 0){
                 pq.add(new Node((byte)i, symFreqs[i], null, null));
-                nodeCount++;
             }
         }
     	return pq;
@@ -72,13 +69,17 @@ public class Huffman {
             // 2.1 Remove the two nodes of highest priority (lowest probability) from the queue
             Node left = pq.poll();
             Node right = pq.poll();
+            if(left.isLeaf() && !right.isLeaf()){
+            	Node tmp = left;
+            	left = right;
+            	right = tmp;
+            }
 
             // 2.2 Create a new internal node with these two nodes as children and with probability equal to the sum of the two nodes' probabilities.
-            Node merged = new Node((byte)0, left.freq+right.freq, left, right);
+            Node merged = new Node((byte)1, left.freq+right.freq, left, right);
 
             // 2.3 Add the new node to the queue.
             pq.add(merged);
-            nodeCount++;
         }
         return pq.peek();
     }
@@ -108,23 +109,22 @@ public class Huffman {
      * @throws IOException
      */
     private void writeTree(BitWriter w, Node treeRoot) throws IOException{
-    	byte[] tree = flattenTree(treeRoot, nodeCount);
+    	byte[] tree = flattenTree(treeRoot);
     	OutputStream out = w.getOutputStream();
-    	out.write(ByteBuffer.allocate(4).putInt(nodeCount).array());
-    	out.write(tree, 1, tree.length-1);
+    	out.write(ByteBuffer.allocate(4).putInt(tree.length).array());
+    	out.write(tree);
     	out.flush();
     }
     
     /**
      * Przekształca drzewo w tablicę bajtów
      * @param root korzeń drzewa
-     * @param nodeCount liczba wierzchołków drzewa
      * @return spłaszczona reprezentacja
      */
-    private static byte[] flattenTree(Node root, int nodeCount){
-    	ByteBuffer buffer = ByteBuffer.allocate(nodeCount+1);
+    private static byte[] flattenTree(Node root){
+    	AutoExpandingByteBuffer buffer = new AutoExpandingByteBuffer(1024);
     	root.writeValue(buffer, 1);
-    	return buffer.array();
+    	return buffer.getBytes();
     }
     
     /**
@@ -140,7 +140,7 @@ public class Huffman {
     	//zapisz wielkość zakodowanego bloku
     	out.write(ByteBuffer.allocate(4).putInt(blockSize).array());
     	for(int i = 0;i<vector.length;i++){
-    		w.write(huffmanCodes[i]);
+    		w.write(huffmanCodes[vector[i]]);
     	}
     	w.flush();
     }
@@ -152,7 +152,8 @@ public class Huffman {
     private int calcBlockSize(){
     	int result = 0;
     	for(int i =0;i<huffmanCodes.length;i++){
-    		result+=huffmanCodes[i].length;
+    		if(huffmanCodes[i]!= null )
+    			result+=huffmanCodes[i].length;
     	}
     	if(result % 8 != 0){
     		result += 8;
@@ -178,11 +179,11 @@ public class Huffman {
      * @throws IOException
      */
     private Node readTree(BitReader reader) throws IOException{
-    	nodeCount = readInt(reader);
-    	byte[] treeBuffer = new byte[nodeCount];
+    	int treeSize = readInt(reader);
+    	byte[] treeBuffer = new byte[treeSize];
     	InputStream in = reader.getInputStream();
     	int read = in.read(treeBuffer);
-    	if(read!=nodeCount)
+    	if(read!=treeSize)
     		throw new IOException("Unable to read the tree, bytes missing.");
     	return Node.readNode(treeBuffer, 1);
     }
@@ -266,7 +267,7 @@ public class Huffman {
             return this.freq - o.freq;
         }
         
-        public void writeValue(ByteBuffer b, int position){
+        public void writeValue(AutoExpandingByteBuffer b, int position){
         	b.put(position, symbol);
         	if(!isLeaf()){
         		left.writeValue(b, position*2);
@@ -275,7 +276,7 @@ public class Huffman {
         }
         
         public static Node readNode(byte[] buf, int position){
-        	if(position>buf.length)
+        	if(position-1>=buf.length || buf[position-1]==0)
         		return null;
         	else
         		return new Node(buf[position-1], 0, readNode(buf, position*2), readNode(buf, position*2+1));
@@ -300,6 +301,43 @@ public class Huffman {
     	
     	public int getByteCount(){
     		return byteCount;
+    	}
+    }
+    
+    private static class AutoExpandingByteBuffer{
+    	byte[] buffer;
+    	int start = Integer.MAX_VALUE;
+    	int end = Integer.MIN_VALUE;
+    	
+    	public AutoExpandingByteBuffer(int initialCapacity){
+    		buffer = new byte[initialCapacity];
+    	}
+    	
+    	public void put(int index, byte b){
+    		if(index >= buffer.length){
+    			enlrageBuffer(index);
+    		}
+    		buffer[index] = b;
+    		if(index > end){
+    			end = index;
+    		}
+    		if(index < start){
+    			start = index;
+    		}
+    	}
+    	
+    	private void enlrageBuffer(int index){
+    		int newLen = buffer.length+buffer.length/4;
+    		if(newLen <= index){
+    			newLen = index + index/8;
+    		}
+    		buffer = new byte[newLen];
+    	}
+    	
+    	public byte[] getBytes(){
+    		byte[] bytes = new byte[(end - start) + 1];
+    		System.arraycopy(buffer, start, bytes, 0, bytes.length);
+    		return bytes;
     	}
     }
 }
