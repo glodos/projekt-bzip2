@@ -15,11 +15,11 @@ public class MoveToFront {
 		}
 		byte[] result = new byte[input.length];
 		for(int i = 0;i<input.length;i++){
-			result[i] = L[input[i]];
+			result[i] = L[input[i] & 0xFF];
 	        for (int j=0; j<256; j++)
-	            if (L[j] < L[input[i]])
+	            if (L[j] < L[input[i] & 0xFF])
 	                L[j]++;
-	        L[input[i]] = 0;
+	        L[input[i] & 0xFF] = 0;
 		}
 		return result;
 	}
@@ -38,8 +38,8 @@ public class MoveToFront {
 		byte[] result = new byte[input.length];
 		byte tmp;
 	    for (int i = 0; i<input.length; i++) {
-	    	result[i] = L[input[i]];
-	        tmp = L[input[i]];
+	    	result[i] = L[input[i] & 0xFF];
+	        tmp = L[input[i] & 0xFF];
 	        for (int j = input[i]; j>0; j--)
 	            L[j] = L[j-1];
 	        L[0] = tmp;
