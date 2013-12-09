@@ -2,6 +2,7 @@ package pl.bzip2.io;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.EOFException;
+import java.nio.ByteBuffer;
 
 import org.omg.CORBA.PRIVATE_MEMBER;
 
@@ -67,5 +68,29 @@ public class BitReader {
 	public InputStream getInputStream(){
 		return input;
 	}
+	
+    /**
+     * Pomocnicza funkcja do czytania liczby int ze strumienia wejściowego.
+     * @param r strumień wejściowy
+     * @return następne 4 bajty z wejścia zamienione na int
+     * @throws IOException
+     */
+    public int readInt() throws IOException{
+    	ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+    	byte[] intBuf = byteBuffer.array();
+    	int read = input.read(intBuf);
+    	if(read!=4)
+    		throw new IOException("Unable to read the int");
+    	return byteBuffer.getInt(0);
+    }
+    
+    public boolean eof(){
+    	try {
+			return input.available() == 0;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+    }
 	
 }

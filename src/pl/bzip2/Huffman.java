@@ -39,7 +39,7 @@ public class Huffman {
     private int[] calcFrequencies(byte[] vector){
     	int [] symFreqs = new int[SYMBOL_COUNT];
     	for(int i = 0; i < vector.length; i++)
-            symFreqs[vector[i]]++;
+            symFreqs[vector[i] & 0xFF]++;
     	return symFreqs;
     }
     
@@ -94,7 +94,7 @@ public class Huffman {
 		if (node.isLeaf()) {
 			byte[] code = new byte[codeLength];
 			System.arraycopy(buf, 0, code, 0, codeLength);
-			huffmanCodes[node.symbol] = code;
+			huffmanCodes[node.symbol & 0xFF] = code;
 		} else {
 			buf[codeLength] = 0;
 			fillHuffmanCodes(node.left, buf, codeLength+1);
@@ -111,7 +111,7 @@ public class Huffman {
     private void writeTree(BitWriter w, Node treeRoot) throws IOException{
     	byte[] tree = flattenTree(treeRoot);
     	OutputStream out = w.getOutputStream();
-    	out.write(ByteBuffer.allocate(4).putInt(tree.length).array());
+    	w.writeInt(tree.length);
     	out.write(tree);
     	out.flush();
     }
@@ -136,11 +136,11 @@ public class Huffman {
     	int blockSize = calcBlockSize();
     	OutputStream out = w.getOutputStream();
     	//zapisz wielkość oryginalnego bloku
-    	out.write(ByteBuffer.allocate(4).putInt(vector.length).array());
+    	w.writeInt(vector.length);
     	//zapisz wielkość zakodowanego bloku
-    	out.write(ByteBuffer.allocate(4).putInt(blockSize).array());
+    	w.writeInt(blockSize);
     	for(int i = 0;i<vector.length;i++){
-    		w.write(huffmanCodes[vector[i]]);
+    		w.write(huffmanCodes[vector[i] & 0xFF]);
     	}
     	w.flush();
     }
@@ -179,7 +179,7 @@ public class Huffman {
      * @throws IOException
      */
     private Node readTree(BitReader reader) throws IOException{
-    	int treeSize = readInt(reader);
+    	int treeSize = reader.readInt();
     	byte[] treeBuffer = new byte[treeSize];
     	InputStream in = reader.getInputStream();
     	int read = in.read(treeBuffer);
@@ -196,9 +196,9 @@ public class Huffman {
      * @throws IOException
      */
     private static byte[] decodeHuffmanCode(BitReader r, Node treeRoot) throws IOException{
-    	int originalBlockSize = readInt(r);
+    	int originalBlockSize = r.readInt();
     	byte[] vector = new byte[originalBlockSize];
-    	int dataSize = readInt(r);
+    	int dataSize = r.readInt();
     	BitCounter bitCounter = new BitCounter(dataSize);
     	for(int i=0;i<originalBlockSize;i++){
     		Node leaf = findLeaf(treeRoot, r, bitCounter);
@@ -225,22 +225,6 @@ public class Huffman {
     	}else{
     		return findLeaf(n.right, r, bitCounter);
     	}
-    }
-    
-    /**
-     * Pomocnicza funkcja do czytania liczby int ze strumienia wejściowego.
-     * @param r strumień wejściowy
-     * @return następne 4 bajty z wejścia zamienione na int
-     * @throws IOException
-     */
-    private static int readInt(BitReader r) throws IOException{
-    	InputStream in = r.getInputStream();
-    	ByteBuffer byteBuffer = ByteBuffer.allocate(4);
-    	byte[] intBuf = byteBuffer.array();
-    	int read = in.read(intBuf);
-    	if(read!=4)
-    		throw new IOException("Unable to read the int");
-    	return byteBuffer.getInt(0);
     }
     
 
@@ -276,6 +260,11 @@ public class Huffman {
         }
         
         public static Node readNode(byte[] buf, int position){
+        	// TODO
+        	/*
+        	 * tu jest błąd, bo puste pola są oznaczane przez 0 a nie powinny
+        	 * trzeba wymyśleć sposób na oznaczanie pustych pól lub na zapis drzewa huffmana
+        	 */
         	if(position-1>=buf.length || buf[position-1]==0)
         		return null;
         	else

@@ -1,6 +1,7 @@
 package pl.bzip2.io;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * Wrapper na OutputStream pozwalający pisać bity
@@ -50,6 +51,10 @@ public class BitWriter {
 		if (bufferPos/8 == buffer.length) {
 			flush();
 		}
+	}
+	
+	public void writeInt(int integer) throws IOException{
+		out.write(ByteBuffer.allocate(4).putInt(integer).array());
 	}
 	
 	/**
