@@ -47,7 +47,7 @@ public class BZip2 {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		boolean encode = true;
+		boolean encode = args[0].equals("encode");
 		BZip2 bZip2 = new BZip2();
 		if(encode){
 			InputStream in = new FileInputStream(new File("Huffman.java"));
