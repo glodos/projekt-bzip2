@@ -2,6 +2,8 @@ package pl.bzip2;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -18,18 +20,22 @@ public class BitWriterTest {
 
 	@Test
 	public void testWrite() throws IOException {
-		PipedInputStream in = new PipedInputStream();
-		PipedOutputStream out = new PipedOutputStream(in);
+		ByteArrayOutputStream out = new ByteArrayOutputStream(4);
 		BitWriter w = new BitWriter(out);
-		//w.write((byte)1);
-		w.write(new byte[]{0, 0, 0, 0, 0, 0, 0, 1});
+		//2116456356
+		byte[] num = new byte[]{0,1,1,1,1,1,1,0,0,0,1,0,0,1,1,0,1,0,0,0,1,1,1,1,1,0,1,0,0,1,0,0};
+		w.write(num);
 		w.flush();
-		byte[] input = new byte[10];
-		int read = in.read(input);
+		byte[] input = out.toByteArray();
+		//input should be [126, 38, -113, -92]
 		w.close();
-		in.close();
-		assertTrue(read==1);
-		assertTrue(input[0]==1);
+		out.close();
+		assertTrue(decode(input)==2116456356);
 	}
+	
+	private static int decode(byte[] bi) {
+		  return bi[3] & 0xFF | (bi[2] & 0xFF) << 8 |
+		         (bi[1] & 0xFF) << 16 | (bi[0] & 0xFF) << 24;
+		}
 
 }

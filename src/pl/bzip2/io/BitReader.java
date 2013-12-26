@@ -18,7 +18,7 @@ public class BitReader {
 	private int bufferLength;
 	private int bufferPos;
 	
-	private static final int BUFFER_LENGTH = 1024*8;
+	private static final int BUFFER_LENGTH = 1024*900;
 	private static byte[] helper = {(byte)0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 	
 	public BitReader(InputStream input) {
