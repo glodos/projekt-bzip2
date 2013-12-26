@@ -8,7 +8,7 @@ public class MoveToFrontTest {
 
 	@Test
 	public void testEncodeDecode1() {
-		String test = "dupa dupa dupa heheszki";
+		String test = "dupa dupa dupa heheszki łłłłąąąąććć";
 		byte[] encoded = MoveToFront.encode(test.getBytes());
 		String decoded = new String(MoveToFront.decode(encoded));
 		assertEquals(test, decoded);
@@ -16,7 +16,7 @@ public class MoveToFrontTest {
 
 	@Test
 	public void testEncodeDecode2() {
-		String test = "Fajny projekt";
+		String test = "Fajny projekt łłłłąąąąććć";
 		byte[] encoded = MoveToFront.encode(test.getBytes());
 		String decoded = new String(MoveToFront.decode(encoded));
 		assertEquals(test, decoded);

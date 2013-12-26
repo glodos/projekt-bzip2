@@ -105,7 +105,7 @@ public class Huffman {
      * @param w strumień wyjściowy
      * @throws IOException
      */
-    private void writeFreqs(BitWriter w, int[] freqs) throws IOException{
+    void writeFreqs(BitWriter w, int[] freqs) throws IOException{
     	int bytesLength = freqs.length*4;
     	OutputStream out = w.getOutputStream();
     	w.writeInt(freqs.length);
@@ -174,7 +174,7 @@ public class Huffman {
      * @return korzeń odtworzonego drzewa
      * @throws IOException
      */
-    private int[] readFreqs(BitReader reader) throws IOException{
+    int[] readFreqs(BitReader reader) throws IOException{
     	int length = reader.readInt()*4;
     	byte[] buffer = new byte[length];
     	InputStream in = reader.getInputStream();
@@ -251,7 +251,11 @@ public class Huffman {
 
         @Override
         public int compareTo(Node o) {
-            return this.freq - o.freq;
+        	if(this.freq == o.freq){
+        		return symbol - o.symbol;
+        	}else{
+        		return this.freq - o.freq;
+        	}
         }
         
     }
