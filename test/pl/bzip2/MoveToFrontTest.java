@@ -21,5 +21,13 @@ public class MoveToFrontTest {
 		String decoded = new String(MoveToFront.decode(encoded));
 		assertEquals(test, decoded);
 	}
+	
+	@Test
+	public void testEncodeDecode3() {
+		String test = "bananaaa";
+		byte[] encoded = MoveToFront.encode(test.getBytes());
+		String decoded = new String(MoveToFront.decode(encoded));
+		assertEquals(test, decoded);
+	}
 
 }
