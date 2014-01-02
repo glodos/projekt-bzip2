@@ -43,17 +43,6 @@ public class BWTransform {
 		return new BWTransform(result, firstIndex);
 	}
 	
-    /**
-     * The standard number of bits per chunk/word when huffing.
-     */
-    public static final int BITS_PER_WORD = 8;
-    
-    /**
-     * The size of the alphabet given the number of bits per chunk, this
-     * should be 2^BITS_PER_WORD.
-     */
-    public static final int ALPH_SIZE = (1 << BITS_PER_WORD);
-	
 	public static byte[] decode(byte[] data, int start){
 		byte[] F = Arrays.copyOf(data, data.length);
 		Arrays.sort(F);
