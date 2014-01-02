@@ -24,7 +24,7 @@ public class MoveToFrontTest {
 	
 	@Test
 	public void testEncodeDecode3() {
-		String test = "bananaaa";
+		String test = "ehehehehehe łąąććźżżżśś90.,|]~~~]';d";
 		byte[] encoded = MoveToFront.encode(test.getBytes());
 		String decoded = new String(MoveToFront.decode(encoded));
 		assertEquals(test, decoded);

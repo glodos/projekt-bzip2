@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.PriorityQueue;
+import java.util.logging.Logger;
 
 import pl.bzip2.io.BitReader;
 import pl.bzip2.io.BitWriter;
@@ -18,10 +19,10 @@ public class Huffman {
     /**
      * Koduje ciąg bajtów. Drzewo i zakodowany blok są zapisywane w strumieniu wyjściowym.
      * @param vector dane wejściowe
-     * @param writer strumień wyjściowy
+     * @param output strumień wyjściowy
      * @throws IOException
      */
-    public void encode(byte [] vector, BitWriter writer) throws IOException {
+    public void encode(byte [] vector, OutputStream output) throws IOException {
         // 0. Calculate chars frequencies
         int[] symFreqs = calcFrequencies(vector);
         // 1. Create a leaf node for each symbol and add it to the priority queue
@@ -29,8 +30,8 @@ public class Huffman {
         Node treeRoot = buildTree(pq);
         byte[] codeBuffer = new byte[SYMBOL_COUNT];
         fillHuffmanCodes(treeRoot, codeBuffer, 0);
-        writeFreqs(writer, symFreqs);
-        writeEncodedBlock(writer, vector);
+        writeFreqs(output, symFreqs);
+        writeEncodedBlock(output, vector);
     }
     
     /**
@@ -102,14 +103,12 @@ public class Huffman {
     
     /**
      * Zapisuje prawdopodobieństwa symboli
-     * @param w strumień wyjściowy
+     * @param out strumień wyjściowy
      * @throws IOException
      */
-    void writeFreqs(BitWriter w, int[] freqs) throws IOException{
+    void writeFreqs(OutputStream out, int[] freqs) throws IOException{
     	int bytesLength = freqs.length*4;
-    	OutputStream out = w.getOutputStream();
-    	w.writeInt(freqs.length);
-    	w.flush();
+    	BZip2.writeInt(freqs.length, out);
     	byte[] buf = new byte[bytesLength];
     	for(int i = 0;i<bytesLength;i+=4){
     		buf[i]  = (byte) (freqs[i/4] >>> 24); 
@@ -123,31 +122,32 @@ public class Huffman {
     
     /**
      * Zapisuje zakodowany blok do strumienia wyjściowego
-     * @param w strumień wyjściowy
+     * @param out strumień wyjściowy
      * @throws IOException
      */
-    private void writeEncodedBlock(BitWriter w, byte[] vector) throws IOException{
-    	int blockSize = calcBlockSize();
-    	OutputStream out = w.getOutputStream();
+    private void writeEncodedBlock(OutputStream out, byte[] vector) throws IOException{
+    	int blockSize = calcBlockSize(vector);
     	//zapisz wielkość oryginalnego bloku
-    	w.writeInt(vector.length);
+    	BZip2.writeInt(vector.length, out);
     	//zapisz wielkość zakodowanego bloku
-    	w.writeInt(blockSize);
+    	BZip2.writeInt(blockSize, out);
+    	//zapisz blok
+    	BitWriter w = new BitWriter(blockSize);
     	for(int i = 0;i<vector.length;i++){
     		w.write(huffmanCodes[vector[i] & 0xFF]);
     	}
-    	w.flush();
+    	out.write(w.array());
+    	out.flush();
     }
     
     /**
      * Oblicza rozmiar zakodowanego bloku
      * @return rozmiar bloku w bajtach
      */
-    private int calcBlockSize(){
+    private int calcBlockSize( byte[] vector){
     	int result = 0;
-    	for(int i =0;i<huffmanCodes.length;i++){
-    		if(huffmanCodes[i]!= null )
-    			result+=huffmanCodes[i].length;
+    	for(int i = 0;i<vector.length;i++){
+    		result+=huffmanCodes[vector[i] & 0xFF].length;
     	}
     	if(result % 8 != 0){
     		result += 8;
@@ -157,27 +157,26 @@ public class Huffman {
     
     /**
      * Dekoduje ciąg danych poprzez odtworzenie drzewa Huffmana i odbudowę oryginalnego wektora.
-     * @param reader strumień wejściowy
+     * @param in strumień wejściowy
      * @return oryginalny ciąg danych
      * @throws IOException
      */
-    public byte[] decode(BitReader reader) throws IOException{
-    	int[]symFreqs = readFreqs(reader); 
+    public byte[] decode(InputStream in) throws IOException{
+    	int[]symFreqs = readFreqs(in); 
     	PriorityQueue<Node> pq = fillQueueWithLeafNodes(symFreqs);
         Node treeRoot = buildTree(pq);
-    	return decodeHuffmanCode(reader, treeRoot);
+    	return decodeHuffmanCode(in, treeRoot);
     }
     
     /**
      * Odczytuje drzewo Huffmana z danych wejściowych i odtwarza jego strukturę.
-     * @param reader strumień wejściowy
+     * @param in strumień wejściowy
      * @return korzeń odtworzonego drzewa
      * @throws IOException
      */
-    int[] readFreqs(BitReader reader) throws IOException{
-    	int length = reader.readInt()*4;
+    int[] readFreqs(InputStream in) throws IOException{
+    	int length = BZip2.readInt(in)*4;
     	byte[] buffer = new byte[length];
-    	InputStream in = reader.getInputStream();
     	int read = in.read(buffer);
     	if(read!=length)
     		throw new IOException("Unable to read the frequencies, bytes missing.");
@@ -196,16 +195,20 @@ public class Huffman {
      * @return postać pierwotna ciągu
      * @throws IOException
      */
-    private static byte[] decodeHuffmanCode(BitReader r, Node treeRoot) throws IOException{
-    	int originalBlockSize = r.readInt();
+    private static byte[] decodeHuffmanCode(InputStream in, Node treeRoot) throws IOException{
+    	int originalBlockSize = BZip2.readInt(in);
     	byte[] vector = new byte[originalBlockSize];
-    	int dataSize = r.readInt();
+    	int dataSize = BZip2.readInt(in);
     	try{
+    		byte[] buffer = new byte[dataSize];
+    		in.read(buffer);
+    		BitReader r = new BitReader(buffer);
 	    	for(int i=0;i<originalBlockSize;i++){
 	    		Node leaf = findLeaf(treeRoot, r, dataSize);
 	    		vector[i] = leaf.symbol;
 	    	}
     	}catch(EOFException e){
+    		Logger.getGlobal().info("End of file!");
     		//koniec pliku
     	}
     	return vector;
@@ -222,7 +225,7 @@ public class Huffman {
     private static Node findLeaf(Node n, BitReader r, int dataSize) throws IOException{
     	if(n.isLeaf())
     		return n;
-    	byte bit = r.read(dataSize);
+    	byte bit = r.read();
     	if(bit==0){
     		return findLeaf(n.left, r, dataSize);
     	}else{

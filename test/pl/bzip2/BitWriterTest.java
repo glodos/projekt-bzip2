@@ -20,16 +20,12 @@ public class BitWriterTest {
 
 	@Test
 	public void testWrite() throws IOException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream(4);
-		BitWriter w = new BitWriter(out);
+		BitWriter w = new BitWriter(4);
 		//2116456356
 		byte[] num = new byte[]{0,1,1,1,1,1,1,0,0,0,1,0,0,1,1,0,1,0,0,0,1,1,1,1,1,0,1,0,0,1,0,0};
 		w.write(num);
-		w.flush();
-		byte[] input = out.toByteArray();
+		byte[] input = w.array();
 		//input should be [126, 38, -113, -92]
-		w.close();
-		out.close();
 		assertTrue(decode(input)==2116456356);
 	}
 	

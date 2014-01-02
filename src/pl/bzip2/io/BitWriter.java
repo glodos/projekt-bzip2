@@ -1,46 +1,31 @@
 package pl.bzip2.io;
-import java.io.OutputStream;
+import java.io.EOFException;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 /**
- * Wrapper na OutputStream pozwalający pisać bity
+ * Wrapper na tablicę bajtów pozwalający pisać bity
  */
 public class BitWriter {
 	
-	public static final int BUFFER_LENGTH = 1024*8;
-	private OutputStream out;
 	private byte[] buffer;
 	private int bufferPos;
 
 	private static byte[] helper = {(byte)0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 	
 	
-	public BitWriter(OutputStream output) {
-		out = output;
-		buffer = new byte[BUFFER_LENGTH];
+	public BitWriter(int bufferSize) {
+		buffer = new byte[bufferSize];
 	}
 	
 	/**
-	 * Zapisuje zawartość bufora do strumienia o ustawia pozycję bufora na 0.
-	 * @throws IOException
-	 */
-	public void flush() throws IOException {
-		int length = bufferPos/8;
-		if (bufferPos%8 != 0) {
-			length++;
-		}
-		out.write(buffer, 0, length);
-		bufferPos = 0;
-	}
-	
-	/**
-	 * Zapisuje bit do bufora. Jeśli bufor jest pełny, dane są zapisywane do strumienia.<br>
-	 * Jeśli konieczne jest wymuszenie zapisu bufora, należy użyć {@link #flush()}
+	 * Zapisuje bit do bufora.
 	 * @param bit 0 lub 1
 	 * @throws IOException
 	 */
 	public void write(byte bit) throws IOException {
+		if(bufferPos >= buffer.length * 8){
+			throw new EOFException();
+		}
 		byte temp = helper[bufferPos%8];
 		if (bit == 0) {
 			buffer[bufferPos/8] &= (~temp);
@@ -48,21 +33,6 @@ public class BitWriter {
 			buffer[bufferPos/8] |= temp;
 		}
 		bufferPos++;
-		if (bufferPos/8 == buffer.length) {
-			flush();
-		}
-	}
-	
-	public void writeInt(int integer) throws IOException{
-		out.write(ByteBuffer.allocate(4).putInt(integer).array());
-	}
-	
-	/**
-	 * Zamyka strumień pod spodem
-	 * @throws IOException
-	 */
-	public void close() throws IOException{
-		out.close();
 	}
 	
 	/**
@@ -77,12 +47,8 @@ public class BitWriter {
 		}
 	}
 	
-	/**
-	 * Zwraca strumień pod spodem
-	 * @return
-	 */
-	public OutputStream getOutputStream(){
-		return out;
+	public byte[] array(){
+		return buffer;
 	}
 	
 }

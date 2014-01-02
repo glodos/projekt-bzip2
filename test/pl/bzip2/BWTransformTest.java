@@ -21,5 +21,13 @@ public class BWTransformTest {
 		String decoded = new String(BWTransform.decode(encoded.getVector(), encoded.getStart()));
 		assertEquals(test, decoded);
 	}
+	
+	@Test
+	public void testEncodeAndDecode3() {
+		String test = "ehehehehehe łąąććźżżżśś90.,|]~~~]';d";
+		BWTransform encoded = BWTransform.encode(test.getBytes());
+		String decoded = new String(BWTransform.decode(encoded.getVector(), encoded.getStart()));
+		assertEquals(test, decoded);
+	}
 
 }

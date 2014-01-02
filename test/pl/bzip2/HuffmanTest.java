@@ -28,9 +28,8 @@ public class HuffmanTest {
 	public void testWriteFreqs() throws IOException {
 		Huffman huff = new Huffman();
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		BitWriter w = new BitWriter(out);
 		int[]freqs = new int[]{1, 2, 45678, 13232534, 2119999999, 0, 0, 0}; 
-		huff.writeFreqs(w, freqs);
+		huff.writeFreqs(out, freqs);
 		byte[] output = out.toByteArray();
 		assertEquals(freqs.length, decode(output, 0));
 		int[] result = new int[freqs.length];
@@ -46,8 +45,7 @@ public class HuffmanTest {
 		byte [] input = new byte[]{0, 0, 0, 8, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, -78, 110, 
 				0, -55, -23, -106, 126, 92, -95, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		ByteArrayInputStream in = new ByteArrayInputStream(input);
-		BitReader r = new BitReader(in);
-		int[] freqs = huff.readFreqs(r);
+		int[] freqs = huff.readFreqs(in);
 		int[] originalfreqs = new int[]{1, 2, 45678, 13232534, 2119999999, 0, 0, 0}; 
 		assertArrayEquals(originalfreqs, freqs);
 	}
@@ -56,13 +54,26 @@ public class HuffmanTest {
 	public void testEncodeDecode() throws IOException{
 		Huffman huff = new Huffman();
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		BitWriter w = new BitWriter(output);
 		byte[]bytes = "ehehehehehe łąąććźżżżśś90.,|]~~~]';d".getBytes(); 
-		huff.encode(bytes, w);
+		huff.encode(bytes, output);
 		ByteArrayInputStream inputStream = new ByteArrayInputStream(output.toByteArray());
-		BitReader r = new BitReader(inputStream);
-		byte[] decoded = huff.decode(r);
+		byte[] decoded = huff.decode(inputStream);
 		assertArrayEquals(bytes, decoded);
+	}
+	
+	@Test
+	public void testEncodeDecode2() throws IOException{
+		Huffman huff = new Huffman();
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		byte[] block1 = "łąąććźżżżśś90.,|]~~~]';d".getBytes(); 
+		byte[] block2 = "ehehehehehe".getBytes();
+		huff.encode(block1, output);
+		huff.encode(block2, output);
+		ByteArrayInputStream inputStream = new ByteArrayInputStream(output.toByteArray());
+		byte[] decoded1 = huff.decode(inputStream);
+		byte[] decoded2 = huff.decode(inputStream);
+		assertArrayEquals(block1, decoded1);
+		assertArrayEquals(block2, decoded2);
 	}
 
 
