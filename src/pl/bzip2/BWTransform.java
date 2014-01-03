@@ -5,6 +5,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Klasa implementująca transformatę Burrowsa-Wheelera.
+ * Obiekty tej klasy reprezentują jedynie gotową transformatę.
+ * @author krzysiek
+ *
+ */
 public class BWTransform {
 	
 	private byte[] vector;
@@ -15,14 +21,27 @@ public class BWTransform {
 		this.start = start;
 	}
 	
+	/**
+	 * Zwraca zakodowany ciąg
+	 * @return
+	 */
 	public byte[] getVector() {
 		return vector;
 	}
 
+	/**
+	 * Zwraca pozycję pierwszego znaku ciągu oryginalnego
+	 * @return
+	 */
 	public int getStart() {
 		return start;
 	}
 	
+	/**
+	 * Koduje ciąg wejściowy transformatą BW
+	 * @param bytes ciąg wejściowy
+	 * @return wynikowa transformata
+	 */
 	public static BWTransform encode(byte[] bytes){
 		int n = bytes.length;
 		List<BWRotation> rotations = new ArrayList<>(n);
@@ -85,6 +104,12 @@ public class BWTransform {
 //		return bytes[(start+bytes.length-1) % bytes.length];
 //	}
 	
+	/**
+	 * Dekoduje ostatnią kolumnę macierzy rotacji w oryginalny ciąg
+	 * @param data zakodowany ciag
+	 * @param start indeks pierwszego znaku ciągu oryginalnego
+	 * @return oryginalna postać ciągu
+	 */
 	public static byte[] decode(byte[] data, int start){
 		byte[] F = Arrays.copyOf(data, data.length);
 		Arrays.sort(F);
@@ -98,27 +123,45 @@ public class BWTransform {
 		return result;
 	}
 	
+	/**
+	 * Generuje wektor przejść taki, że L[i] oraz L[T[i]] to kolejne symbole oryginalnego ciagu.
+	 * @param L ostatnia kolumna macierzy rotacji
+	 * @param F pierwsza kolumna macierzy rotacji
+	 * @return wektor przejść T
+	 */
 	private static int[] generateT(byte[] L, byte[] F){
 		int[] T = new int[L.length];
+		//zlicz ile razy występuje każdy symbol
 		int[]freqs = new int[256];
 		for(int i = 0;i<L.length;i++){
 			freqs[L[i]&0xFF] ++;
 		}
+		//utwórz tablice dla kazdego symbolu przechowująca jego pozycje w L
 		int[][] indices = new int[256][];
 		for(int i = 0;i<indices.length;i++){
 			indices[i] = new int[freqs[i]];
 		}
+		//wypełnij tablice symboli ich pozycjami w L
 		for(int i = 0;i<L.length;i++){
+			//pobierz tablice dla danego symbolu
 			int[] positions = indices[L[i]&0xFF];
+			//dodaj jego pozycje w L do tablicy
 			positions[positions.length - freqs[L[i]&0xFF]--] = i;
 		}
 		for(int i = 0;i<F.length;i++){
+			//pobierz tablice dla danego symbolu
 			int[] positions = indices[F[i]&0xFF];
+			//wypisz kolejna pozycje symbolu w L do tablicy T
 			T[i] = positions[(positions.length+freqs[F[i]&0xFF]++)%positions.length]; 
 		}
 		return T;
 	}
 
+	/**
+	 * Reprezentuje rotację ciągu. Sam ciąg pozostaje w niezmienionej postaci, modyfikacji
+	 * podlega indeks startowy. Na jego podstawie np. pierwszy znak rotacji to 7 znak ciągu rzeczywistego. 
+	 * @author krzysiek
+	 */
 	static class BWRotation implements Comparable<BWRotation>{
 		byte[] bytes;
 		int start;

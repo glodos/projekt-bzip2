@@ -30,9 +30,7 @@ public class MoveToFront {
 	 */
 	private static void moveToFront(byte[] array, int index){
 		byte tmp = array[index];
-		for(int i = index;i>0;i--){
-			array[i] = array[i-1];
-		}
+		System.arraycopy(array, 0, array, 1, index);
 		array[0] = tmp;
 	}
 	/**
@@ -44,6 +42,7 @@ public class MoveToFront {
 	private static int find(byte[] array, byte b){
 		if(array[b & 0xFF] == b)
 			return b & 0xFF;
+		//to daje złożoność n^2 dla całego MTF, przy bloku 900KB - ała:/
 		for(int i = 0;i<array.length;i++){
 			if(array[i] == b)
 				return i;

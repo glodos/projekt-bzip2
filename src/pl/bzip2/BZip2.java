@@ -11,7 +11,14 @@ import java.text.ParseException;
 
 public class BZip2 {
 	
-	public static final String HELP = "Usage: bzip2.jar";
+	public static final String HELP = "Usage: bzip2.jar [options]\n" +
+			"Options:\n" +
+			"-c, --compress <file>          Compress specified file\n" +
+			"-d, --decompress <file>        Decompress specified file\n" +
+			"-o, --output <file>            Specify output file name, otherwise default is used\n" +
+			"-b, --block-size <size>        Specify compression block size in kilobytes\n" +
+			"-h, --help                     Print this help\n\n" +
+			"Copyright Krzysztof Glodowski and Lukasz Krok\n";
 	
 	public enum Option{COMPRESS, DECOMPRESS, OUTPUT, BLOCK_SIZE, HELP}
 
@@ -71,6 +78,12 @@ public class BZip2 {
 		}
 	}
 	
+	/**
+	 * Wyznacza ściezkę do pliku wyjściowego na podstawie podanych programowi argumentów
+	 * @param input ścieżka wejściowa
+	 * @param output ściezka wyjściowa (plik, folder lub null)
+	 * @return plik wyjściowy
+	 */
 	private static File prepareOutput(String input, String output){
 		File inFile = new File(input).getAbsoluteFile();
 		String inName = inFile.getName();
@@ -130,9 +143,9 @@ public class BZip2 {
 				break;
 			}
 		} catch (ParseException e) {
-			e.printStackTrace();
+			System.err.println(e.getMessage());
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println(e.getMessage());
 		}
 	}
 	
@@ -140,12 +153,23 @@ public class BZip2 {
 		System.out.println(HELP);
 	}
 	
+	/**
+	 * Prosty parser argumentów wywołania
+	 * @author krzysiek
+	 *
+	 */
 	public static class OptParser{
 		private Option main = Option.HELP;
 		private Option current;
 		private String output;
 		private String input;
 		private int blockSize;
+		
+		/**
+		 * Parsuje argumenty wywołania programu
+		 * @param args
+		 * @throws ParseException jesli argumenty są niepoprawne
+		 */
 		public OptParser(String[] args) throws ParseException{
 			String opt;
 			for(int i = 0;i<args.length;i++){
@@ -197,23 +221,46 @@ public class BZip2 {
 			}
 		}
 		
+		/**
+		 * Sprawdza, czy podano kolejny argument dla parametru, który go wymaga
+		 * @param args lista wszystkich parametrów
+		 * @param position pozycja aktualnego parametru
+		 * @param current aktualny parametr
+		 * @throws ParseException jeśli brak kolejnego parametru
+		 */
 		private void checkSecondArg(String[] args, int position, Option current) throws ParseException{
 			if(position+1 >= args.length)
 				throw new ParseException("Missing argument for option "+current, position);
 		}
 		
+		/**
+		 * Pobiera główną opcję dla programu
+		 * @return jedno z {@link Option#COMPRESS}, {@link Option#DECOMPRESS} lub {@link Option#HELP}
+		 */
 		public Option getMainOption(){
 			return main;
 		}
 		
+		/**
+		 * Pobiera ścieżkę podaną jako plik wejściowy
+		 * @return
+		 */
 		public String getInput(){
 			return input;
 		}
 		
+		/**
+		 * Pobiera ściezkę podaną jako plik wyjściowy
+		 * @return ścieżka wyjściowa lub null, jesli nie podano
+		 */
 		public String getOutput(){
 			return output;
 		}
 		
+		/**
+		 * Pobiera rozmiar bloku kompresji
+		 * @return rozmiar bloku w KB lub 0, jesli nie podano
+		 */
 		public int getBlockSize(){
 			return blockSize;
 		}
