@@ -22,10 +22,12 @@ public class BZip2 {
 	
 	public enum Option{COMPRESS, DECOMPRESS, OUTPUT, BLOCK_SIZE, HELP}
 
-	private static void compress(String in, String out, int blockSize) throws IOException{
+	static CompressionInfo compress(String in, String out, int blockSize) throws IOException{
+		long startTime = System.currentTimeMillis();
 		System.out.println("Compressing "+in);
 		InputStream input = new FileInputStream(in);
-		OutputStream output = new FileOutputStream(prepareOutput(in, out));
+		File file = prepareOutput(in, out);
+		OutputStream output = new FileOutputStream(file);
 		if(blockSize > 0){
 			blockSize*= 1024;
 		}else{
@@ -53,9 +55,13 @@ public class BZip2 {
 			input.close();
 			output.close();
 		}
+		float ratio = file.length()*1.0f/new File(in).length();
+		long time = System.currentTimeMillis()-startTime;
+		return new CompressionInfo(time, ratio, blockSize);
 	}
 	
-	private static void decompress(String in, String out) throws IOException{
+	static CompressionInfo decompress(String in, String out) throws IOException{
+		long startTime = System.currentTimeMillis();
 		System.out.println("Decompressing "+in);
 		InputStream input = new FileInputStream(in);
 		OutputStream output = new FileOutputStream(prepareOutput(in, out));
@@ -76,6 +82,8 @@ public class BZip2 {
 			input.close();
 			output.close();
 		}
+		long time = System.currentTimeMillis()-startTime;
+		return new CompressionInfo(time, 0, 0);
 	}
 	
 	/**
@@ -132,10 +140,13 @@ public class BZip2 {
 			OptParser parser = new OptParser(args);
 			switch (parser.getMainOption()) {
 			case COMPRESS:
-				compress(parser.getInput(), parser.getOutput(), parser.getBlockSize());
+				CompressionInfo info = compress(parser.getInput(), parser.getOutput(), parser.getBlockSize());
+				System.out.println("Compression ratio: "+info.ratio);
+				System.out.printf("Compression time: %d s (%d ms)\n",info.time/1000+1, info.time);
 				break;
 			case DECOMPRESS:
-				decompress(parser.getInput(), parser.getOutput());
+				info = decompress(parser.getInput(), parser.getOutput());
+				System.out.printf("Decompression time: %d s (%d ms)\n",info.time/1000+1, info.time);
 				break;
 			case HELP:
 			default:
@@ -263,6 +274,18 @@ public class BZip2 {
 		 */
 		public int getBlockSize(){
 			return blockSize;
+		}
+	}
+	
+	static class CompressionInfo{
+		public long time;
+		public float ratio;
+		public int blockSize;
+		public CompressionInfo(long time, float ratio, int blockSize) {
+			super();
+			this.time = time;
+			this.ratio = ratio;
+			this.blockSize = blockSize;
 		}
 	}
 }

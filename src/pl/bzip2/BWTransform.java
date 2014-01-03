@@ -62,48 +62,6 @@ public class BWTransform {
 		return new BWTransform(result, firstIndex);
 	}
 	
-//	public static BWTransform encode2(final byte[] bytes){
-//		final int n = bytes.length;
-//		Integer[] rotations = new Integer[n];
-//		for(int i = 0;i<n;i++){
-//			rotations[i] = i;
-//		}
-//		Arrays.sort(rotations, new Comparator<Integer>() {
-//
-//			@Override
-//			public int compare(Integer o1, Integer o2) {
-//		        int k = 0;
-//		        while (k < n) {
-//		            int c1 = byteAt(o1, k, bytes);
-//		            int c2 = byteAt(o2, k, bytes);
-//		            if (c1 != c2) {
-//		                return c1 - c2;
-//		            }
-//		            k++;
-//		        }
-//		        return 0;
-//			}
-//		});
-//		int firstIndex = 0;
-//		byte[] result = new byte[n];
-//		//BWRotation r;
-//		for(int i = 0;i<n;i++){
-//			result[i] = getLast(rotations[i], bytes);
-//			if (rotations[i]==1) {
-//				firstIndex = i;
-//			}
-//		}
-//		return new BWTransform(result, firstIndex);
-//	}
-//	
-//	private static byte byteAt(int start, int index, byte[] bytes){
-//		return bytes[(start+index+bytes.length) % bytes.length];
-//	}
-//	
-//	private static byte getLast(int start, byte[] bytes){
-//		return bytes[(start+bytes.length-1) % bytes.length];
-//	}
-	
 	/**
 	 * Dekoduje ostatnią kolumnę macierzy rotacji w oryginalny ciąg
 	 * @param data zakodowany ciag
